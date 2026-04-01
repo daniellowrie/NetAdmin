@@ -7,15 +7,22 @@ Requires: flask, python3-nmap (or nmap), arp-scan, net-tools
 
 import os
 import re
+import sys
 import json
 import time
 import socket
 import struct
+import logging
 import threading
 import subprocess
 import ipaddress
 from datetime import datetime
 from flask import Flask, jsonify, send_from_directory, request
+
+# ─── Logging control: silent by default, --verbose enables request logs ───────
+VERBOSE = '--verbose' in sys.argv
+if not VERBOSE:
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 app = Flask(__name__, static_folder='static')
 
@@ -365,7 +372,11 @@ def api_traceroute():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  NetAdmin Portal - Starting on http://0.0.0.0:7070")
+    print("  NetAdmin Portal  —  http://0.0.0.0:7070")
+    if VERBOSE:
+        print("  HTTP logging: ENABLED (--verbose)")
+    else:
+        print("  HTTP logging: OFF  (run with --verbose to enable)")
     print("=" * 60)
     # Kick off initial scan
     t = threading.Thread(target=full_scan, daemon=True)

@@ -65,10 +65,10 @@ button:disabled{opacity:.35;cursor:not-allowed}
   box-shadow:0 0 6px var(--accent);transition:width .3s}
 
 /* ── LAYOUT ── */
-#main{display:flex;flex-direction:column;flex:1;overflow:hidden}
+#main{display:flex;flex-direction:row;flex:1;overflow:hidden}
 
 /* ── MAP PANEL ── */
-#mapp{flex:0 0 52%;display:flex;flex-direction:column;border-bottom:2px solid var(--border);min-height:0}
+#mapp{flex:0 0 50%;display:flex;flex-direction:column;border-right:2px solid var(--border);min-width:0;overflow:hidden}
 #mapbar{display:flex;align-items:center;gap:10px;padding:5px 12px;
   background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;font-family:var(--font-mono);font-size:11px}
 .maptitle{color:var(--accent);letter-spacing:2px}
@@ -81,7 +81,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #srch:focus{border-color:var(--accent)}
 #srch::placeholder{color:var(--muted)}
 
-#mapwrap{flex:1;position:relative;overflow:hidden;min-height:0}
+#mapwrap{flex:1;position:relative;overflow:hidden;min-height:0;min-width:0}
 #mc{width:100%;height:100%;display:block;cursor:grab}
 #mc:active{cursor:grabbing}
 #mc.dragging-node{cursor:none}
@@ -108,7 +108,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .ttoff{color:var(--danger)}
 
 /* ── DETAIL PANEL ── */
-#detailp{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+#detailp{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 
 /* ── DOSSIER ── */
 #dossier{flex:1;overflow-y:auto;overflow-x:hidden;padding:0}
