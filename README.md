@@ -4,6 +4,8 @@ A lightweight, zero-dependency network administration dashboard for Linux.
 Discovers devices on your local network, visualizes them on an interactive map,
 and provides live health/status monitoring — all from a browser.
 
+<img width="1614" height="723" alt="image" src="https://github.com/user-attachments/assets/d2dbe849-c57d-44bb-a7e6-9472f999db7c" />
+
 ---
 
 ## Quick Start
