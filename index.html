@@ -23,15 +23,32 @@
   --font-mono:'Share Tech Mono', monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px}
+
+/* The page is a strict vertical flex column — header shrinks, #main takes all remaining height */
+html{height:100%;overflow:hidden}
+body{
+  height:100%;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;   /* ← critical: stacks header + progress + main vertically */
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:14px;
+}
 
 /* scanlines */
 body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.05) 2px,rgba(0,0,0,.05) 4px)}
 
 /* ── HEADER ── */
-#header{display:flex;align-items:center;gap:16px;padding:8px 18px;
-  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;overflow:hidden;height:48px}
+#header{
+  display:flex;align-items:center;gap:16px;padding:8px 18px;
+  background:var(--panel);border-bottom:1px solid var(--border);
+  flex-shrink:0;          /* never let header grow or shrink */
+  position:relative;overflow:hidden;
+  height:48px;
+}
 #header::after{content:'';position:absolute;bottom:0;left:-100%;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:hline 5s linear infinite}
 @keyframes hline{to{left:100%}}
@@ -64,13 +81,30 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #pgfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
   box-shadow:0 0 6px var(--accent);transition:width .3s}
 
-/* ── LAYOUT ── */
-#main{display:flex;flex-direction:row;flex:1;overflow:hidden}
+/* ── MAIN — horizontal split, fills all space below header ── */
+#main{
+  display:flex;
+  flex-direction:row;
+  flex:1 1 0;             /* grow to fill, shrink if needed, basis 0 */
+  min-height:0;           /* allow flex children to shrink below content size */
+  overflow:hidden;
+}
 
-/* ── MAP PANEL ── */
-#mapp{flex:0 0 50%;display:flex;flex-direction:column;border-right:2px solid var(--border);min-width:0;overflow:hidden}
-#mapbar{display:flex;align-items:center;gap:10px;padding:5px 12px;
-  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;font-family:var(--font-mono);font-size:11px}
+/* ── MAP PANEL (left) ── */
+#mapp{
+  flex:0 0 50%;           /* fixed 50% width, never grows/shrinks */
+  display:flex;
+  flex-direction:column;
+  border-right:2px solid var(--border);
+  min-width:0;
+  overflow:hidden;        /* contain everything inside */
+}
+#mapbar{
+  display:flex;align-items:center;gap:10px;padding:5px 12px;
+  background:var(--panel);border-bottom:1px solid var(--border);
+  flex-shrink:0;          /* toolbar never changes height */
+  font-family:var(--font-mono);font-size:11px;
+}
 .maptitle{color:var(--accent);letter-spacing:2px}
 .msp{flex:1}
 .fbtn{background:transparent;border:1px solid var(--border);color:var(--muted);
@@ -81,10 +115,17 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #srch:focus{border-color:var(--accent)}
 #srch::placeholder{color:var(--muted)}
 
-#mapwrap{flex:1;position:relative;overflow:hidden;min-height:0;min-width:0}
-#mc{width:100%;height:100%;display:block;cursor:grab}
+/* mapwrap fills the column, canvas is sized by JS not CSS */
+#mapwrap{
+  flex:1 1 0;             /* fill remaining vertical space in #mapp */
+  position:relative;
+  overflow:hidden;
+  min-height:0;
+  min-width:0;
+}
+/* Do NOT set canvas width/height via CSS — JS controls it imperatively */
+#mc{display:block;cursor:grab}
 #mc:active{cursor:grabbing}
-#mc.dragging-node{cursor:none}
 
 /* ── SCAN OVERLAY ── */
 #sovl{position:absolute;inset:0;background:rgba(6,11,17,.88);
@@ -107,11 +148,17 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .tton{color:var(--accent2)}
 .ttoff{color:var(--danger)}
 
-/* ── DETAIL PANEL ── */
-#detailp{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+/* ── DETAIL PANEL (right) ── */
+#detailp{
+  flex:1 1 0;             /* fills the other 50%, grows/shrinks within row */
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  min-width:0;
+}
 
 /* ── DOSSIER ── */
-#dossier{flex:1;overflow-y:auto;overflow-x:hidden;padding:0}
+#dossier{flex:1 1 0;overflow-y:auto;overflow-x:hidden;padding:0;min-height:0}
 #dossier::-webkit-scrollbar{width:4px}
 #dossier::-webkit-scrollbar-thumb{background:var(--border2)}
 
@@ -350,13 +397,21 @@ function resetLayout() {
 }
 
 // ─── Canvas ──────────────────────────────────────────────────────────────────
+// ─── Canvas sizing — driven entirely by JS, never by CSS width/height ────────
 function resizeCanvas() {
-  const w = document.getElementById('mapwrap');
-  canvas.width  = w.clientWidth;
-  canvas.height = w.clientHeight;
-  // Don't re-layout — preserve drag positions
+  const wrap = document.getElementById('mapwrap');
+  const rect  = wrap.getBoundingClientRect();
+  // Only resize if dimensions actually changed (avoids thrashing during dossier render)
+  if (canvas.width === Math.floor(rect.width) && canvas.height === Math.floor(rect.height)) return;
+  canvas.width  = Math.floor(rect.width);
+  canvas.height = Math.floor(rect.height);
   draw();
 }
+
+// ResizeObserver watches the mapwrap div directly — fires when its pixel box changes
+// regardless of what caused the change (window resize, dossier load, etc.)
+const _mapResizeObs = new ResizeObserver(() => resizeCanvas());
+_mapResizeObs.observe(document.getElementById('mapwrap'));
 
 function filteredDevices() {
   return devices.filter(d => {
@@ -896,9 +951,8 @@ async function loadNetInfo() {
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-window.addEventListener('resize', resizeCanvas);
-
 async function init() {
+  // resizeCanvas is handled by ResizeObserver on #mapwrap — no window listener needed
   resizeCanvas();
   animate();
   loadNetInfo();
