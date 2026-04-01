@@ -166,43 +166,109 @@ def get_os_guess(ip):
         if ttl <= 255: return "Cisco/Network OS"
     return "Unknown OS"
 
-def arp_scan_network(network):
-    """Discover devices using arp-scan or fallback to nmap -sn."""
-    devices = {}
+def read_arp_table():
+    """Read all IP→MAC mappings from every available ARP source.
+    Returns dict {ip: mac_string}. Never raises."""
+    macs = {}
 
-    # Try arp-scan first (fastest)
-    out, err, rc = run_cmd(f"arp-scan --localnet 2>/dev/null || arp-scan {network} 2>/dev/null", timeout=60)
-    if rc == 0 and out:
-        for line in out.splitlines():
-            m = re.match(r'(\d+\.\d+\.\d+\.\d+)\s+([\da-fA-F:]{17})\s+(.*)', line)
-            if m:
-                ip, mac, vendor = m.group(1), m.group(2).lower(), m.group(3).strip()
-                devices[ip] = {"ip": ip, "mac": mac, "vendor": vendor[:50]}
-        if devices:
-            return devices
+    # 1. /proc/net/arp — always readable, no root needed
+    try:
+        with open("/proc/net/arp") as f:
+            for line in f:
+                parts = line.split()
+                # columns: IP HWtype Flags HWaddress Mask Device
+                if len(parts) >= 4 and re.match(r'\d+\.\d+\.\d+\.\d+', parts[0]):
+                    ip, mac = parts[0], parts[3]
+                    if re.match(r'[\da-fA-F]{2}:[\da-fA-F]{2}:', mac) and mac != "00:00:00:00:00:00":
+                        macs[ip] = mac.lower()
+    except Exception:
+        pass
 
-    # Fallback: nmap -sn (ping scan)
-    out, _, rc = run_cmd(f"nmap -sn {network} 2>/dev/null", timeout=120)
-    if rc == 0:
-        current_ip = None
-        for line in out.splitlines():
-            ip_m = re.search(r'Nmap scan report for (?:.*\()?(\d+\.\d+\.\d+\.\d+)\)?', line)
-            if ip_m:
-                current_ip = ip_m.group(1)
-                devices[current_ip] = {"ip": current_ip, "mac": "unknown", "vendor": "Unknown"}
-            mac_m = re.search(r'MAC Address: ([\dA-Fa-f:]{17})\s+\((.*?)\)', line)
-            if mac_m and current_ip:
-                devices[current_ip]["mac"] = mac_m.group(1).lower()
-                devices[current_ip]["vendor"] = mac_m.group(2)[:50]
-        if devices:
-            return devices
+    # 2. `ip neigh show` — works without root, covers IPv4 neighbours
+    out, _, _ = run_cmd("ip neigh show")
+    for line in out.splitlines():
+        m = re.search(r'^(\d+\.\d+\.\d+\.\d+)\s+.*lladdr\s+([\da-fA-F:]{17})', line)
+        if m:
+            ip, mac = m.group(1), m.group(2).lower()
+            if mac != "00:00:00:00:00:00":
+                macs[ip] = mac
 
-    # Last resort: parse local ARP table
-    out, _, _ = run_cmd("arp -n")
+    # 3. `arp -n` — legacy tool, same kernel table
+    out, _, _ = run_cmd("arp -n 2>/dev/null")
     for line in out.splitlines():
         m = re.match(r'(\d+\.\d+\.\d+\.\d+)\s+\S+\s+([\da-fA-F:]{17})', line)
         if m:
             ip, mac = m.group(1), m.group(2).lower()
+            if mac != "00:00:00:00:00:00":
+                macs[ip] = mac
+
+    return macs
+
+
+def arp_scan_network(network):
+    """Discover devices using arp-scan or fallback to nmap -sn.
+    After getting the IP list, always cross-reference the kernel ARP table
+    so MACs are populated even when the scanner ran without root."""
+    devices = {}
+
+    # ── Step 1: discover hosts ────────────────────────────────────────────────
+
+    # Try arp-scan with and without sudo (needs root to send raw ARP)
+    for arp_cmd in [
+        f"sudo arp-scan --localnet 2>/dev/null",
+        f"arp-scan --localnet 2>/dev/null",
+        f"sudo arp-scan {network} 2>/dev/null",
+        f"arp-scan {network} 2>/dev/null",
+    ]:
+        out, _, rc = run_cmd(arp_cmd, timeout=60)
+        if rc == 0 and out:
+            for line in out.splitlines():
+                m = re.match(r'(\d+\.\d+\.\d+\.\d+)\s+([\da-fA-F:]{17})\s+(.*)', line)
+                if m:
+                    ip = m.group(1)
+                    mac = m.group(2).lower()
+                    vendor = m.group(3).strip()
+                    devices[ip] = {"ip": ip, "mac": mac, "vendor": vendor[:50]}
+            if devices:
+                break  # got results, stop trying
+
+    # Fallback: nmap ping scan (discovers hosts; MACs only visible to root)
+    if not devices:
+        for nmap_cmd in [
+            f"sudo nmap -sn {network} 2>/dev/null",
+            f"nmap -sn {network} 2>/dev/null",
+        ]:
+            out, _, rc = run_cmd(nmap_cmd, timeout=120)
+            if rc == 0 and out:
+                current_ip = None
+                for line in out.splitlines():
+                    ip_m = re.search(r'Nmap scan report for (?:.*\()?(\d+\.\d+\.\d+\.\d+)\)?', line)
+                    if ip_m:
+                        current_ip = ip_m.group(1)
+                        devices[current_ip] = {"ip": current_ip, "mac": "unknown", "vendor": "Unknown"}
+                    mac_m = re.search(r'MAC Address: ([\dA-Fa-f:]{17})\s+\((.*?)\)', line)
+                    if mac_m and current_ip:
+                        devices[current_ip]["mac"] = mac_m.group(1).lower()
+                        devices[current_ip]["vendor"] = mac_m.group(2)[:50]
+                if devices:
+                    break
+
+    # ── Step 2: fill in missing MACs from kernel ARP table ───────────────────
+    # The kernel always knows the MAC of every host it has talked to recently.
+    # This is always available without root and covers cases where arp-scan/nmap
+    # couldn't retrieve MACs (e.g. non-root nmap only shows MACs for gateway).
+    arp_table = read_arp_table()
+
+    for ip, info in devices.items():
+        if info.get("mac", "unknown") in ("unknown", "", None):
+            if ip in arp_table:
+                info["mac"] = arp_table[ip]
+                if not info.get("vendor") or info["vendor"] == "Unknown":
+                    info["vendor"] = get_mac_vendor(info["mac"])
+
+    # Also pick up any hosts the ARP table knows about that the scanner missed
+    for ip, mac in arp_table.items():
+        if ip not in devices:
             devices[ip] = {"ip": ip, "mac": mac, "vendor": get_mac_vendor(mac)}
 
     return devices
@@ -213,6 +279,13 @@ def enrich_device(ip, base_info):
     info["online"] = ping_host(ip)
     info["hostname"] = get_hostname(ip) or ip
     info["last_seen"] = datetime.now().isoformat()
+
+    # If MAC is still unknown, pinging the host populates the kernel ARP cache —
+    # so now is a good moment to re-read it.
+    if info.get("mac", "unknown") in ("unknown", "", None):
+        arp = read_arp_table()
+        if ip in arp:
+            info["mac"] = arp[ip]
 
     if info["online"]:
         info["open_ports"] = get_open_ports(ip)
@@ -227,7 +300,14 @@ def enrich_device(ip, base_info):
         info["device_type"] = base_info.get("device_type", "Unknown")
         info["latency_ms"] = None
 
-    info["vendor"] = base_info.get("vendor") or get_mac_vendor(info.get("mac", ""))
+    # Resolve vendor from MAC if not already set
+    mac = info.get("mac", "")
+    if mac and mac != "unknown":
+        if not info.get("vendor") or info["vendor"] in ("Unknown", ""):
+            info["vendor"] = get_mac_vendor(mac)
+    else:
+        info["vendor"] = base_info.get("vendor") or "Unknown"
+
     return info
 
 def measure_latency(ip):

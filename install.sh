@@ -349,11 +349,47 @@ cd "$INSTALL_DIR"
 exec "$PY_EXEC" server.py "\$@"
 LAUNCH
 chmod +x "$LAUNCHER"
-ok "Launcher: $LAUNCHER"
+ok "Launcher written: $LAUNCHER"
 
-if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
-  warn "$HOME/.local/bin not in PATH."
-  info "Add to your ~/.bashrc:   export PATH=\"\$HOME/.local/bin:\$PATH\""
+# ── Ensure $HOME/.local/bin is on PATH ───────────────────────────────────────
+# We check the current PATH, then proactively add it to every shell RC we find.
+PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+PATH_ADDED=0
+
+if echo "$PATH" | grep -q "$HOME/.local/bin"; then
+  ok "\$HOME/.local/bin is already in PATH — launcher is immediately usable."
+  PATH_ADDED=1
+fi
+
+# Write to shell RC files regardless, so future shells have it too
+for RC in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile"; do
+  if [[ -f "$RC" ]]; then
+    if ! grep -q '\.local/bin' "$RC" 2>/dev/null; then
+      echo "" >> "$RC"
+      echo "# Added by NetAdmin installer" >> "$RC"
+      echo "$PATH_LINE" >> "$RC"
+      ok "Added \$HOME/.local/bin to PATH in $RC"
+    else
+      info "\$HOME/.local/bin already referenced in $RC"
+    fi
+  fi
+done
+
+# Also export it into the current shell session so the user can run it right now
+export PATH="$HOME/.local/bin:$PATH"
+
+# ── Fallback: symlink into /usr/local/bin (system-wide, always on PATH) ──────
+SYSLINK="/usr/local/bin/netadmin"
+if [[ ! -f "$SYSLINK" ]]; then
+  info "Creating system-wide symlink at $SYSLINK …"
+  if $SUDO ln -sf "$LAUNCHER" "$SYSLINK" 2>/dev/null; then
+    ok "System-wide symlink created: $SYSLINK"
+    ok "'netadmin' is now available to all users without PATH changes."
+  else
+    warn "Could not create $SYSLINK (sudo failed). Falling back to RC-file PATH only."
+  fi
+else
+  ok "System-wide symlink already exists: $SYSLINK"
 fi
 
 # ============================================================
