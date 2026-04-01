@@ -4,430 +4,267 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NetAdmin Portal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-/* ─── Variables ─────────────────────────────────────────────────────────── */
 :root {
-  --bg:        #080d14;
-  --panel:     #0d1520;
-  --border:    #1a2d45;
-  --accent:    #00d4ff;
-  --accent2:   #00ff88;
-  --warn:      #ffaa00;
-  --danger:    #ff3355;
-  --text:      #c8e0f4;
-  --muted:     #4a6a8a;
-  --glow:      0 0 12px rgba(0,212,255,0.35);
-  --glow2:     0 0 12px rgba(0,255,136,0.35);
-  --font-ui:   'Exo 2', sans-serif;
-  --font-mono: 'Share Tech Mono', monospace;
-  --radius:    6px;
+  --bg:       #060b11;
+  --panel:    #0b1520;
+  --panel2:   #0f1e2e;
+  --border:   #162840;
+  --border2:  #1e3a5a;
+  --accent:   #00c8f0;
+  --accent2:  #00e87a;
+  --warn:     #f0a800;
+  --danger:   #f03050;
+  --text:     #b8d8f0;
+  --muted:    #3a5878;
+  --dim:      #243040;
+  --font-ui:  'Exo 2', sans-serif;
+  --font-mono:'Share Tech Mono', monospace;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px}
 
-/* ─── Reset & Base ──────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-}
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.05) 2px,rgba(0,0,0,.05) 4px)}
 
-/* Scanline overlay */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.06) 2px,
-    rgba(0,0,0,0.06) 4px
-  );
-  pointer-events: none;
-}
+/* ── HEADER ── */
+#header{display:flex;align-items:center;gap:16px;padding:8px 18px;
+  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;overflow:hidden;height:48px}
+#header::after{content:'';position:absolute;bottom:0;left:-100%;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:hline 5s linear infinite}
+@keyframes hline{to{left:100%}}
 
-/* ─── Header ────────────────────────────────────────────────────────────── */
-#header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 20px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-}
-#header::after {
-  content: '';
-  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  animation: scanH 4s linear infinite;
-}
-@keyframes scanH { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+.logo{font-family:var(--font-mono);font-size:18px;color:var(--accent);letter-spacing:4px;
+  text-shadow:0 0 10px rgba(0,200,240,.4);white-space:nowrap}
+.logo em{color:var(--accent2);font-style:normal;text-shadow:0 0 10px rgba(0,232,122,.4)}
+#netinfo{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-left:4px}
+#netinfo b{color:var(--accent)}
+.hsp{flex:1}
 
-.logo {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  color: var(--accent);
-  letter-spacing: 3px;
-  text-shadow: var(--glow);
-  white-space: nowrap;
-}
-.logo span { color: var(--accent2); text-shadow: var(--glow2); }
+#statsbar{display:flex;gap:18px;font-family:var(--font-mono)}
+.stat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.sv{font-size:22px;font-weight:700;line-height:1}
+.sv.t{color:var(--accent);text-shadow:0 0 8px rgba(0,200,240,.5)}
+.sv.on{color:var(--accent2);text-shadow:0 0 8px rgba(0,232,122,.5)}
+.sv.off{color:var(--danger)}
+.sl{font-size:9px;color:var(--muted);letter-spacing:1.5px}
 
-#net-info {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  margin-left: 8px;
-}
-#net-info b { color: var(--accent); }
+.hbtn{font-family:var(--font-mono);font-size:11px;padding:5px 14px;border-radius:4px;
+  cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;background:transparent}
+#bscan{border:1px solid var(--accent);color:var(--accent)}
+#bscan:hover{background:var(--accent);color:var(--bg);box-shadow:0 0 12px rgba(0,200,240,.4)}
+#bhealth{border:1px solid var(--accent2);color:var(--accent2);margin-left:4px}
+#bhealth:hover{background:var(--accent2);color:var(--bg);box-shadow:0 0 12px rgba(0,232,122,.4)}
+button:disabled{opacity:.35;cursor:not-allowed}
 
-.hdr-spacer { flex: 1; }
+/* ── PROGRESS ── */
+#pgwrap{height:2px;background:var(--border);flex-shrink:0;display:none}
+#pgfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
+  box-shadow:0 0 6px var(--accent);transition:width .3s}
 
-#stats-bar {
-  display: flex;
-  gap: 20px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-.stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.stat-val { font-size: 20px; font-weight: 700; line-height: 1; }
-.stat-val.online  { color: var(--accent2); text-shadow: var(--glow2); }
-.stat-val.offline { color: var(--danger); }
-.stat-val.total   { color: var(--accent); text-shadow: var(--glow); }
-.stat-lbl { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+/* ── LAYOUT ── */
+#main{display:flex;flex-direction:column;flex:1;overflow:hidden}
 
-#btn-scan, #btn-health {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 7px 18px;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  border-radius: var(--radius);
-  letter-spacing: 1px;
-  transition: all .2s;
-  text-transform: uppercase;
-}
-#btn-scan:hover  { background: var(--accent); color: var(--bg); box-shadow: var(--glow); }
-#btn-health { border-color: var(--accent2); color: var(--accent2); margin-left: 6px; }
-#btn-health:hover { background: var(--accent2); color: var(--bg); box-shadow: var(--glow2); }
-button:disabled { opacity: .4; cursor: not-allowed; }
+/* ── MAP PANEL ── */
+#mapp{flex:0 0 52%;display:flex;flex-direction:column;border-bottom:2px solid var(--border);min-height:0}
+#mapbar{display:flex;align-items:center;gap:10px;padding:5px 12px;
+  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;font-family:var(--font-mono);font-size:11px}
+.maptitle{color:var(--accent);letter-spacing:2px}
+.msp{flex:1}
+.fbtn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:3px 9px;border-radius:3px;cursor:pointer;font-family:var(--font-mono);font-size:10px;transition:all .15s}
+.fbtn.on,.fbtn:hover{border-color:var(--accent);color:var(--accent)}
+#srch{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:3px;
+  padding:3px 9px;color:var(--text);font-family:var(--font-mono);font-size:11px;width:150px;outline:none}
+#srch:focus{border-color:var(--accent)}
+#srch::placeholder{color:var(--muted)}
 
-/* ─── Progress Bar ──────────────────────────────────────────────────────── */
-#progress-wrap {
-  height: 3px;
-  background: var(--border);
-  flex-shrink: 0;
-  display: none;
-}
-#progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  box-shadow: 0 0 8px var(--accent);
-  transition: width .4s;
-  width: 0%;
-}
+#mapwrap{flex:1;position:relative;overflow:hidden;min-height:0}
+#mc{width:100%;height:100%;display:block;cursor:grab}
+#mc:active{cursor:grabbing}
+#mc.dragging-node{cursor:none}
 
-/* ─── Main Layout ───────────────────────────────────────────────────────── */
-#main {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-  gap: 0;
-}
+/* ── SCAN OVERLAY ── */
+#sovl{position:absolute;inset:0;background:rgba(6,11,17,.88);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:50}
+#sovl.vis{display:flex}
+#sovmsg{font-family:var(--font-mono);color:var(--accent);font-size:13px;letter-spacing:2px}
+.sbwrap{width:280px;height:3px;background:var(--border);border-radius:2px}
+.sbfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
+  border-radius:2px;box-shadow:0 0 6px var(--accent);transition:width .35s}
 
-/* ─── Map Panel ─────────────────────────────────────────────────────────── */
-#map-panel {
-  flex: 0 0 55%;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  overflow: hidden;
-}
+/* ── TOOLTIP ── */
+#tt{position:fixed;background:rgba(6,11,17,.97);border:1px solid var(--accent);border-radius:5px;
+  padding:9px 13px;font-family:var(--font-mono);font-size:11px;line-height:1.8;
+  pointer-events:none;z-index:8000;display:none;min-width:210px;
+  box-shadow:0 0 18px rgba(0,200,240,.2)}
+.ttn{color:var(--accent);font-size:13px;font-weight:bold;margin-bottom:3px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.ttr{display:flex;gap:6px}
+.ttk{color:var(--muted);width:58px;flex-shrink:0}
+.ttv{color:var(--text)}
+.tton{color:var(--accent2)}
+.ttoff{color:var(--danger)}
 
-#map-toolbar {
-  display: flex;
-  align-items: center;
-  padding: 6px 14px;
-  background: rgba(13,21,32,0.9);
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-  flex-shrink: 0;
-  font-size: 11px;
-  font-family: var(--font-mono);
-}
-.map-title { color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
-.map-spacer { flex: 1; }
-.filter-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  padding: 3px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  transition: all .2s;
-}
-.filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-#search-box {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 3px 10px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  width: 160px;
-  outline: none;
-}
-#search-box:focus { border-color: var(--accent); }
-#search-box::placeholder { color: var(--muted); }
+/* ── DETAIL PANEL ── */
+#detailp{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 
-#map-canvas-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-#map-canvas {
-  width: 100%; height: 100%;
-  display: block;
-  cursor: grab;
-}
-#map-canvas:active { cursor: grabbing; }
+/* ── DOSSIER ── */
+#dossier{flex:1;overflow-y:auto;overflow-x:hidden;padding:0}
+#dossier::-webkit-scrollbar{width:4px}
+#dossier::-webkit-scrollbar-thumb{background:var(--border2)}
 
-/* ─── Tooltip ───────────────────────────────────────────────────────────── */
-#tooltip {
-  position: fixed;
-  background: rgba(8,13,20,0.97);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  pointer-events: none;
-  z-index: 9000;
-  display: none;
-  min-width: 220px;
-  box-shadow: 0 0 20px rgba(0,212,255,0.2);
-}
-#tooltip .tt-name { color: var(--accent); font-size: 13px; font-weight: bold; margin-bottom: 4px; }
-#tooltip .tt-row  { display: flex; gap: 8px; }
-#tooltip .tt-key  { color: var(--muted); width: 60px; flex-shrink: 0; }
-#tooltip .tt-val  { color: var(--text); }
-#tooltip .tt-online  { color: var(--accent2); }
-#tooltip .tt-offline { color: var(--danger); }
+/* empty state */
+#dempty{display:flex;align-items:center;justify-content:center;height:100%;
+  color:var(--muted);font-family:var(--font-mono);font-size:12px;text-align:center;line-height:2.2}
 
-/* ─── Detail Panel ──────────────────────────────────────────────────────── */
-#detail-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* dossier layout */
+.dos-wrap{display:flex;height:100%}
 
-#detail-header {
-  padding: 8px 16px;
-  background: rgba(13,21,32,0.9);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.detail-title { color: var(--accent2); letter-spacing: 2px; text-transform: uppercase; }
+/* LEFT SIDEBAR — identity column */
+.dos-id{flex:0 0 220px;background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:0;overflow:hidden}
+.dos-id-top{padding:14px 16px;border-bottom:1px solid var(--border)}
+.dos-badge{width:56px;height:56px;border-radius:50%;border:2px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;
+  position:relative}
+.dos-badge-status{position:absolute;bottom:2px;right:2px;width:10px;height:10px;
+  border-radius:50%;border:2px solid var(--panel)}
+.dos-badge-status.online{background:var(--accent2)}
+.dos-badge-status.offline{background:var(--danger)}
+.dos-hostname{font-family:var(--font-mono);font-size:13px;color:var(--text);
+  text-align:center;word-break:break-all;line-height:1.4}
+.dos-ip{font-family:var(--font-mono);font-size:11px;color:var(--accent);text-align:center;margin-top:2px}
+.dos-status-label{font-family:var(--font-mono);font-size:10px;text-align:center;
+  margin-top:6px;letter-spacing:1px;padding:3px 8px;border-radius:3px;display:inline-block;
+  width:fit-content;margin-left:auto;margin-right:auto}
+.dos-status-label.online{background:rgba(0,232,122,.1);color:var(--accent2);border:1px solid rgba(0,232,122,.3)}
+.dos-status-label.offline{background:rgba(240,48,80,.1);color:var(--danger);border:1px solid rgba(240,48,80,.3)}
 
-#detail-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  align-content: start;
-}
-#detail-body::-webkit-scrollbar { width: 4px; }
-#detail-body::-webkit-scrollbar-thumb { background: var(--border); }
+.dos-fields{padding:10px 14px;flex:1;overflow-y:auto}
+.dos-fields::-webkit-scrollbar{width:3px}
+.dos-fields::-webkit-scrollbar-thumb{background:var(--border)}
+.dos-field{margin-bottom:10px}
+.dos-field-key{font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.dos-field-val{font-family:var(--font-mono);font-size:12px;color:var(--text);word-break:break-all;line-height:1.4}
+.dos-field-val.accent{color:var(--accent)}
+.dos-field-val.green{color:var(--accent2)}
+.dos-field-val.warn{color:var(--warn)}
+.dos-field-val.danger{color:var(--danger)}
+.dos-field-val.muted{color:var(--muted)}
 
-#detail-empty {
-  grid-column: 1/-1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  text-align: center;
-  line-height: 2;
-}
+/* RIGHT MAIN — detail content */
+.dos-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-/* ─── Info Cards ────────────────────────────────────────────────────────── */
-.info-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color .2s;
-}
-.info-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-  opacity: 0.5;
-}
-.info-card:hover { border-color: var(--accent); }
-.card-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.card-value {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--text);
-  word-break: break-all;
-}
-.card-value.accent  { color: var(--accent); text-shadow: var(--glow); }
-.card-value.green   { color: var(--accent2); text-shadow: var(--glow2); }
-.card-value.warn    { color: var(--warn); }
-.card-value.danger  { color: var(--danger); }
+/* HEADER BAR inside dossier */
+.dos-hdr{padding:8px 16px;background:var(--panel2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;font-family:var(--font-mono);font-size:11px}
+.dos-hdr-title{color:var(--accent2);letter-spacing:2px;text-transform:uppercase}
+.dos-hdr-ip{color:var(--muted)}
+.dos-hdr-sp{flex:1}
+.dos-action{font-family:var(--font-mono);font-size:10px;padding:4px 12px;border-radius:3px;
+  cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .15s;background:transparent}
+.dos-action.scan{border:1px solid var(--accent2);color:var(--accent2)}
+.dos-action.scan:hover{background:var(--accent2);color:var(--bg)}
+.dos-action.ping{border:1px solid var(--accent);color:var(--accent)}
+.dos-action.ping:hover{background:var(--accent);color:var(--bg)}
+.dos-action.trace{border:1px solid var(--muted);color:var(--muted)}
+.dos-action.trace:hover{border-color:var(--warn);color:var(--warn)}
 
-.ports-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-.port-badge {
-  background: rgba(0,212,255,0.1);
-  border: 1px solid rgba(0,212,255,0.3);
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: 3px;
-  white-space: nowrap;
-}
-.port-badge.svc { color: var(--accent2); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.08); }
+/* SECTIONS */
+.dos-sections{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.dos-sections::-webkit-scrollbar{width:4px}
+.dos-sections::-webkit-scrollbar-thumb{background:var(--border2)}
 
-.span-2 { grid-column: span 2; }
-.span-3 { grid-column: span 3; }
+.dos-section{background:var(--panel);border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.dos-section-hdr{padding:6px 12px;background:var(--panel2);border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:2px;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.dos-section-hdr::before{content:'';width:3px;height:12px;background:var(--accent);
+  border-radius:2px;flex-shrink:0}
+.dos-section-body{padding:10px 12px}
 
-/* ─── Scan overlay ──────────────────────────────────────────────────────── */
-#scan-overlay {
-  position: absolute; inset: 0;
-  background: rgba(8,13,20,0.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 100;
-  font-family: var(--font-mono);
-}
-#scan-overlay.visible { display: flex; }
-.scan-msg { color: var(--accent); font-size: 14px; letter-spacing: 2px; }
-.scan-bar-wrap { width: 300px; height: 4px; background: var(--border); border-radius: 2px; }
-.scan-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--accent);
-  transition: width .4s;
-}
+/* grid of fields inside a section */
+.dos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px 14px}
+.dos-gfield{display:flex;flex-direction:column;gap:2px}
+.dos-gkey{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.dos-gval{font-family:var(--font-mono);font-size:12px;color:var(--text);word-break:break-all;line-height:1.35}
+.dos-gval.accent{color:var(--accent)} .dos-gval.green{color:var(--accent2)}
+.dos-gval.warn{color:var(--warn)} .dos-gval.danger{color:var(--danger)}
+.dos-gval.muted{color:var(--muted)}
 
-/* ─── Device Type Icons (emoji fallback) ────────────────────────────────── */
-.dev-icon { font-size: 13px; }
+/* ports */
+.port-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)}
+.port-row:last-child{border-bottom:none}
+.port-num{font-family:var(--font-mono);font-size:11px;color:var(--accent);width:46px;flex-shrink:0}
+.port-svc{font-family:var(--font-mono);font-size:11px;color:var(--text)}
+.port-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);flex-shrink:0}
 
-/* ─── Responsive Tweaks ─────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  #detail-body { grid-template-columns: 1fr 1fr; }
-  .span-3 { grid-column: span 2; }
-}
-@media (max-width: 600px) {
-  #detail-body { grid-template-columns: 1fr; }
-  .span-2, .span-3 { grid-column: span 1; }
-  #stats-bar .stat:nth-child(n+3) { display: none; }
-}
+/* terminal */
+.dos-terminal{background:#020a10;border-radius:4px;padding:8px 10px;
+  font-family:var(--font-mono);font-size:11px;color:var(--accent2);
+  white-space:pre-wrap;max-height:160px;overflow-y:auto;line-height:1.5}
+.dos-terminal::-webkit-scrollbar{width:3px}
+.dos-terminal::-webkit-scrollbar-thumb{background:var(--border)}
+.dos-terminal .t-cmd{color:var(--muted)}
 
-/* ─── Animations ────────────────────────────────────────────────────────── */
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-.fade-in { animation: fadeIn .3s ease; }
+/* latency bar */
+.lat-bar-wrap{margin-top:4px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;width:100%}
+.lat-bar{height:100%;border-radius:2px;transition:width .4s}
+.lat-bar.good{background:var(--accent2)}
+.lat-bar.ok{background:var(--warn)}
+.lat-bar.bad{background:var(--danger)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-up{animation:fadeUp .25s ease both}
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div id="header">
-  <div class="logo">NET<span>ADMIN</span></div>
-  <div id="net-info">NETWORK: <b id="hdr-net">—</b> &nbsp;|&nbsp; HOST: <b id="hdr-host">—</b></div>
-  <div class="hdr-spacer"></div>
-  <div id="stats-bar">
-    <div class="stat"><div class="stat-val total" id="st-total">0</div><div class="stat-lbl">TOTAL</div></div>
-    <div class="stat"><div class="stat-val online" id="st-online">0</div><div class="stat-lbl">ONLINE</div></div>
-    <div class="stat"><div class="stat-val offline" id="st-offline">0</div><div class="stat-lbl">OFFLINE</div></div>
+  <div class="logo">NET<em>ADMIN</em></div>
+  <div id="netinfo">NET: <b id="hnet">—</b> &nbsp;|&nbsp; HOST: <b id="hhost">—</b></div>
+  <div class="hsp"></div>
+  <div id="statsbar">
+    <div class="stat"><div class="sv t" id="st">0</div><div class="sl">TOTAL</div></div>
+    <div class="stat"><div class="sv on" id="so">0</div><div class="sl">ONLINE</div></div>
+    <div class="stat"><div class="sv off" id="sf">0</div><div class="sl">OFFLINE</div></div>
   </div>
-  <button id="btn-scan" onclick="startScan()">⟳ SCAN</button>
-  <button id="btn-health" onclick="healthCheck()">♥ HEALTH</button>
+  <button class="hbtn" id="bscan" onclick="startScan()">⟳ SCAN</button>
+  <button class="hbtn" id="bhealth" onclick="doHealth()">♥ HEALTH</button>
 </div>
 
-<!-- Progress -->
-<div id="progress-wrap"><div id="progress-fill"></div></div>
+<div id="pgwrap"><div id="pgfill" style="width:0%"></div></div>
 
-<!-- Main -->
 <div id="main">
 
-  <!-- Map Panel -->
-  <div id="map-panel">
-    <div id="map-toolbar">
-      <span class="map-title">▸ NETWORK MAP</span>
-      <div class="map-spacer"></div>
-      <button class="filter-btn active" onclick="setFilter('all', this)">ALL</button>
-      <button class="filter-btn" onclick="setFilter('online', this)">ONLINE</button>
-      <button class="filter-btn" onclick="setFilter('offline', this)">OFFLINE</button>
-      <input id="search-box" type="text" placeholder="search host / ip…" oninput="onSearch(this.value)">
+  <!-- MAP -->
+  <div id="mapp">
+    <div id="mapbar">
+      <span class="maptitle">▸ NETWORK MAP</span>
+      <div class="msp"></div>
+      <button class="fbtn on" onclick="setFilter('all',this)">ALL</button>
+      <button class="fbtn"    onclick="setFilter('online',this)">ONLINE</button>
+      <button class="fbtn"    onclick="setFilter('offline',this)">OFFLINE</button>
+      <input id="srch" type="text" placeholder="search…" oninput="onSearch(this.value)">
     </div>
-    <div id="map-canvas-wrap">
-      <canvas id="map-canvas"></canvas>
-      <div id="scan-overlay">
-        <div class="scan-msg" id="scan-msg">SCANNING NETWORK…</div>
-        <div class="scan-bar-wrap"><div class="scan-bar-fill" id="scan-bar-fill" style="width:0%"></div></div>
+    <div id="mapwrap">
+      <canvas id="mc"></canvas>
+      <div id="sovl">
+        <div id="sovmsg">SCANNING NETWORK…</div>
+        <div class="sbwrap"><div class="sbfill" id="sbf" style="width:0%"></div></div>
       </div>
     </div>
   </div>
 
-  <!-- Detail Panel -->
-  <div id="detail-panel">
-    <div id="detail-header">
-      <span class="detail-title">▸ DEVICE DETAIL</span>
-      <span id="detail-ip" style="color:var(--muted)">— select a device on the map —</span>
-    </div>
-    <div id="detail-body">
-      <div id="detail-empty">
-        <div>
-          ◈ CLICK ANY DEVICE TO INSPECT<br>
-          <span style="font-size:11px;color:#2a4a6a">hover for quick info · click for full analysis</span>
+  <!-- DETAIL / DOSSIER -->
+  <div id="detailp">
+    <div id="dossier">
+      <div id="dempty">
+        <div>◈ SELECT A DEVICE ON THE MAP<br>
+          <span style="font-size:10px;color:#1e3a5a">hover for quick info · click for full dossier</span>
         </div>
       </div>
     </div>
@@ -435,512 +272,608 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 </div>
 
-<!-- Tooltip -->
-<div id="tooltip"></div>
+<div id="tt"></div>
 
 <script>
-// ─── State ──────────────────────────────────────────────────────────────────
-let devices    = [];
-let filter     = 'all';
-let searchQ    = '';
-let selected   = null;
-let scanPoll   = null;
-let healthPoll = null;
-let nodes      = [];          // positioned device nodes for canvas
-let hovered    = null;
-let dragging   = false;
-let dragStart  = {x:0,y:0};
-let viewOffset = {x:0,y:0};
-let viewScale  = 1;
+// ─── State ───────────────────────────────────────────────────────────────────
+let devices  = [];
+let filter   = 'all';
+let searchQ  = '';
+let selected = null;
+let scanPoll = null;
+let nodes    = [];          // {ip, x, y, r, online, hostname, ...}
+let hovered  = null;
 
-const canvas = document.getElementById('map-canvas');
+// Canvas pan/zoom
+let panX=0, panY=0, zoom=1;
+let isPanning = false;
+let panStart  = {x:0,y:0};
+
+// Node drag
+let dragNode  = null;
+let dragOffX  = 0, dragOffY = 0;
+let didDrag   = false;     // distinguish drag vs click
+
+const canvas = document.getElementById('mc');
 const ctx    = canvas.getContext('2d');
 
-// ─── Device type → icon mapping ─────────────────────────────────────────────
-const TYPE_ICONS = {
-  'Router/Switch':    '⬡',
-  'Windows PC':       '⊞',
-  'Linux Server':     '⬛',
-  'Linux/SSH Device': '⬛',
-  'Web Server':       '⬡',
-  'DNS Server':       '◈',
-  'Apple Device':     '◍',
-  'Smart TV/Media':   '▣',
-  'Mobile/IoT':       '◎',
-  'SBC/IoT':          '◈',
-  'Network Device':   '⬡',
-  'Windows/Samba':    '⊞',
-  'This Host':        '★',
-  'Unknown Device':   '○',
+// ─── Type maps ───────────────────────────────────────────────────────────────
+const TICON = {
+  'Router/Switch':'⬡','Windows PC':'⊞','Linux Server':'▣','Linux/SSH Device':'▣',
+  'Web Server':'◎','DNS Server':'◈','Apple Device':'◍','Smart TV/Media':'▣',
+  'Mobile/IoT':'◎','SBC/IoT':'◈','Network Device':'⬡','Windows/Samba':'⊞',
+  'This Host':'★','Unknown Device':'○'
+};
+const TCOL = {
+  'Router/Switch':'#00c8f0','Windows PC':'#5577ff','Linux Server':'#00e87a',
+  'Linux/SSH Device':'#00e87a','Web Server':'#f0a800','DNS Server':'#dd88ff',
+  'Apple Device':'#aabbff','Smart TV/Media':'#ff6640','Mobile/IoT':'#ffdd44',
+  'SBC/IoT':'#44ffdd','Network Device':'#00c8f0','Windows/Samba':'#5577ff',
+  'This Host':'#ffffff','Unknown Device':'#3a5878'
 };
 
-const TYPE_COLORS = {
-  'Router/Switch':    '#00d4ff',
-  'Windows PC':       '#6688ff',
-  'Linux Server':     '#00ff88',
-  'Linux/SSH Device': '#00ff88',
-  'Web Server':       '#ffaa00',
-  'DNS Server':       '#ff88ff',
-  'Apple Device':     '#aaaaff',
-  'Smart TV/Media':   '#ff6644',
-  'Mobile/IoT':       '#ffdd44',
-  'SBC/IoT':          '#44ffdd',
-  'Network Device':   '#00d4ff',
-  'Windows/Samba':    '#6688ff',
-  'This Host':        '#ffffff',
-  'Unknown Device':   '#4a6a8a',
-};
+function dColor(d){ return d.online ? (TCOL[d.device_type]||'#3a5878') : '#2a1520' }
+function dIcon(d){ return d.is_self ? '★' : (TICON[d.device_type]||'○') }
 
-function deviceColor(d) {
-  if (!d.online) return '#3a2a2a';
-  return TYPE_COLORS[d.device_type] || '#4a6a8a';
-}
+// ─── Grid Layout (5 columns, no hub) ─────────────────────────────────────────
+const COLS = 5;
+const CELL_W = 120;
+const CELL_H = 90;
+const MARGIN = 40;
+const NODE_R = 22;
 
-function deviceIcon(d) {
-  if (d.is_self) return '★';
-  return TYPE_ICONS[d.device_type] || '○';
-}
-
-// ─── Layout ──────────────────────────────────────────────────────────────────
 function layoutNodes(devs) {
-  const w = canvas.width, h = canvas.height;
-  const cx = w / 2, cy = h / 2;
-  const r  = Math.min(w, h) * 0.38;
+  // Preserve positions of already-placed nodes so dragging survives filter changes
+  const existing = {};
+  nodes.forEach(n => { existing[n.ip] = {x:n.x, y:n.y} });
 
-  // Put self (or router) in center; rest in circles
-  const self   = devs.find(d => d.is_self);
-  const others = devs.filter(d => !d.is_self);
-
-  const positioned = [];
-
-  if (self) {
-    positioned.push({ ...self, x: cx, y: cy, r: 28 });
-  }
-
-  const count = others.length;
-  others.forEach((d, i) => {
-    const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
-    // Spread across 1-3 rings depending on count
-    const ring = count > 20 ? (i % 3 + 1) : (count > 8 ? (i % 2 + 1) : 1);
-    const ringR = r * (0.55 + ring * 0.22);
-    positioned.push({
+  return devs.map((d, i) => {
+    if (existing[d.ip]) {
+      // keep user-moved position
+      return { ...d, x: existing[d.ip].x, y: existing[d.ip].y, r: NODE_R };
+    }
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    return {
       ...d,
-      x: cx + Math.cos(angle) * ringR,
-      y: cy + Math.sin(angle) * ringR,
-      r: 20,
-    });
+      x: MARGIN + col * CELL_W + CELL_W / 2,
+      y: MARGIN + row * CELL_H + CELL_H / 2,
+      r: NODE_R
+    };
   });
-  return positioned;
 }
 
-// ─── Canvas Draw ─────────────────────────────────────────────────────────────
-function resizeCanvas() {
-  const wrap = document.getElementById('map-canvas-wrap');
-  canvas.width  = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
+function resetLayout() {
+  // Wipe positions so next layoutNodes uses fresh grid
+  nodes = [];
   nodes = layoutNodes(filteredDevices());
+}
+
+// ─── Canvas ──────────────────────────────────────────────────────────────────
+function resizeCanvas() {
+  const w = document.getElementById('mapwrap');
+  canvas.width  = w.clientWidth;
+  canvas.height = w.clientHeight;
+  // Don't re-layout — preserve drag positions
   draw();
 }
 
 function filteredDevices() {
   return devices.filter(d => {
-    if (filter === 'online'  && !d.online)  return false;
-    if (filter === 'offline' && d.online)   return false;
+    if (filter==='online'  && !d.online)  return false;
+    if (filter==='offline' && d.online)   return false;
     if (searchQ) {
       const q = searchQ.toLowerCase();
-      const match = (d.ip||'').includes(q)
-        || (d.hostname||'').toLowerCase().includes(q)
-        || (d.device_type||'').toLowerCase().includes(q)
-        || (d.vendor||'').toLowerCase().includes(q);
-      if (!match) return false;
+      if (!(d.ip||'').includes(q)
+        && !(d.hostname||'').toLowerCase().includes(q)
+        && !(d.device_type||'').toLowerCase().includes(q)
+        && !(d.vendor||'').toLowerCase().includes(q)) return false;
     }
     return true;
   });
 }
 
+// Animated pulse rings
+let tick = 0;
 function draw() {
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
+  tick++;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
   ctx.save();
-  ctx.translate(viewOffset.x, viewOffset.y);
-  ctx.scale(viewScale, viewScale);
+  ctx.translate(panX, panY);
+  ctx.scale(zoom, zoom);
 
-  if (!nodes.length) {
-    ctx.restore();
-    return;
-  }
+  if (!nodes.length) { ctx.restore(); return; }
 
-  const cx = nodes.find(n => n.is_self);
-  const center = cx || nodes[0];
-
-  // Draw connections from center to others
-  nodes.forEach(n => {
-    if (n === center) return;
-    const online = n.online;
-    ctx.beginPath();
-    ctx.moveTo(center.x, center.y);
-    ctx.lineTo(n.x, n.y);
-    ctx.strokeStyle = online ? 'rgba(0,212,255,0.12)' : 'rgba(255,51,85,0.08)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Animated dots along lines (pseudo via static draw at offset)
-    if (online) {
-      const t = (Date.now() / 2000 + nodes.indexOf(n) * 0.2) % 1;
-      const dx = n.x - center.x, dy = n.y - center.y;
-      const px = center.x + dx * t, py = center.y + dy * t;
-      ctx.beginPath();
-      ctx.arc(px, py, 2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0,212,255,0.5)';
-      ctx.fill();
+  // Draw connecting lines between close neighbours (aesthetic only)
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j];
+      const dist = Math.hypot(a.x-b.x, a.y-b.y);
+      if (dist < CELL_W * 1.5) {
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        const alpha = (1 - dist/(CELL_W*1.5)) * (a.online && b.online ? 0.08 : 0.03);
+        ctx.strokeStyle = `rgba(0,200,240,${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
-  });
+  }
 
   // Draw nodes
   nodes.forEach(n => {
-    const isSelected = selected && selected.ip === n.ip;
-    const isHovered  = hovered && hovered.ip === n.ip;
-    const color = deviceColor(n);
-    const nr = n.r + (isSelected ? 4 : 0);
+    const isSel = selected && selected.ip === n.ip;
+    const isHov = hovered && hovered.ip === n.ip;
+    const isDrg = dragNode && dragNode.ip === n.ip;
+    const color = dColor(n);
+    const r = n.r + (isSel ? 5 : 0) + (isDrg ? 3 : 0);
 
-    // Glow
-    if (n.online) {
-      ctx.shadowColor = color;
-      ctx.shadowBlur  = isSelected ? 24 : isHovered ? 16 : 8;
-    } else {
-      ctx.shadowBlur = 0;
+    // Pulse ring for online nodes
+    if (n.online && (isSel || isHov)) {
+      const pulse = (Math.sin(tick * 0.06) * 0.5 + 0.5);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 8 + pulse * 6, 0, Math.PI*2);
+      ctx.strokeStyle = color + '30';
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
 
-    // Node circle
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = isSel ? 22 : isHov ? 14 : (n.online ? 6 : 0);
+
+    // Fill
     ctx.beginPath();
-    ctx.arc(n.x, n.y, nr, 0, Math.PI * 2);
-    ctx.fillStyle = n.online
-      ? (isSelected ? color + 'cc' : color + '22')
-      : 'rgba(40,10,15,0.8)';
+    ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    if (n.online) {
+      ctx.fillStyle = isSel ? color+'55' : color+'18';
+    } else {
+      ctx.fillStyle = 'rgba(30,8,12,.9)';
+    }
     ctx.fill();
 
+    // Border
     ctx.beginPath();
-    ctx.arc(n.x, n.y, nr, 0, Math.PI * 2);
-    ctx.strokeStyle = n.online
-      ? (isSelected ? color : color + '88')
-      : 'rgba(255,51,85,0.4)';
-    ctx.lineWidth = isSelected ? 2.5 : 1.5;
+    ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    ctx.strokeStyle = n.online ? (isSel ? color : color+'99') : 'rgba(240,48,80,.35)';
+    ctx.lineWidth = isSel ? 2.5 : 1.5;
     ctx.stroke();
     ctx.shadowBlur = 0;
 
     // Icon
-    ctx.fillStyle = n.online ? color : '#553333';
-    ctx.font = `${Math.round(nr * 0.75)}px monospace`;
+    ctx.fillStyle = n.online ? color : '#4a1520';
+    ctx.font = `${Math.round(r*0.72)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(deviceIcon(n), n.x, n.y);
+    ctx.fillText(dIcon(n), n.x, n.y);
 
-    // Offline X badge
+    // Offline X
     if (!n.online) {
-      ctx.fillStyle = '#ff3355';
-      ctx.font = '10px monospace';
-      ctx.fillText('✕', n.x + nr * 0.65, n.y - nr * 0.65);
+      ctx.fillStyle = '#f03050cc';
+      ctx.font = '9px monospace';
+      ctx.fillText('✕', n.x + r*0.62, n.y - r*0.62);
     }
 
-    // Label below
-    const label = n.hostname !== n.ip ? n.hostname : n.ip;
-    const shortLabel = label.length > 18 ? label.substring(0, 16) + '…' : label;
-    ctx.fillStyle = isSelected ? color : (n.online ? 'rgba(200,224,244,0.8)' : 'rgba(100,60,60,0.8)');
-    ctx.font = `${isSelected ? 'bold ' : ''}11px 'Share Tech Mono', monospace`;
+    // Label
+    const label = (n.hostname && n.hostname !== n.ip) ? n.hostname : n.ip;
+    const lshort = label.length > 16 ? label.slice(0,14)+'…' : label;
+    ctx.fillStyle = isSel ? color : (n.online ? 'rgba(184,216,240,.85)' : 'rgba(120,60,70,.8)');
+    ctx.font = `${isSel?'600 ':''} 11px 'Share Tech Mono', monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(shortLabel, n.x, n.y + nr + 5);
-    ctx.fillStyle = 'rgba(74,106,138,0.7)';
-    ctx.font = '10px monospace';
-    ctx.fillText(n.ip, n.x, n.y + nr + 18);
+    ctx.fillText(lshort, n.x, n.y + r + 4);
+    ctx.fillStyle = 'rgba(58,88,120,.75)';
+    ctx.font = '9px monospace';
+    ctx.fillText(n.ip, n.x, n.y + r + 17);
   });
 
   ctx.restore();
 }
 
-let animFrame;
-function animate() {
-  draw();
-  animFrame = requestAnimationFrame(animate);
-}
+let raf;
+function animate(){ draw(); raf = requestAnimationFrame(animate); }
 
-// ─── Mouse interaction ────────────────────────────────────────────────────────
-function canvasCoords(e) {
+// ─── Coord helpers ───────────────────────────────────────────────────────────
+function toWorld(ex, ey) {
   const rect = canvas.getBoundingClientRect();
   return {
-    x: (e.clientX - rect.left - viewOffset.x) / viewScale,
-    y: (e.clientY - rect.top  - viewOffset.y) / viewScale
+    x: (ex - rect.left - panX) / zoom,
+    y: (ey - rect.top  - panY) / zoom
   };
 }
-
-function nodeAt(cx, cy) {
-  return nodes.find(n => Math.hypot(n.x - cx, n.y - cy) <= n.r + 6);
+function nodeAt(wx, wy) {
+  // search in reverse so top-rendered nodes (drawn last) get priority
+  for (let i = nodes.length-1; i >= 0; i--) {
+    const n = nodes[i];
+    if (Math.hypot(n.x-wx, n.y-wy) <= n.r + 5) return n;
+  }
+  return null;
 }
 
-canvas.addEventListener('mousemove', e => {
-  const c = canvasCoords(e);
-  const node = nodeAt(c.x, c.y);
-  hovered = node || null;
-
-  const tt = document.getElementById('tooltip');
-  if (node) {
-    canvas.style.cursor = 'pointer';
-    const lat = node.latency_ms != null ? node.latency_ms.toFixed(1) + ' ms' : '—';
-    const onClass = node.online ? 'tt-online' : 'tt-offline';
-    const onLabel = node.online ? '● ONLINE' : '✕ OFFLINE';
-    tt.innerHTML = `
-      <div class="tt-name">${escHtml(node.hostname !== node.ip ? node.hostname : node.ip)}</div>
-      <div class="tt-row"><span class="tt-key">STATUS</span><span class="tt-val ${onClass}">${onLabel}</span></div>
-      <div class="tt-row"><span class="tt-key">IP</span><span class="tt-val">${escHtml(node.ip)}</span></div>
-      <div class="tt-row"><span class="tt-key">MAC</span><span class="tt-val">${escHtml(node.mac||'—')}</span></div>
-      <div class="tt-row"><span class="tt-key">OS</span><span class="tt-val">${escHtml(node.os_guess||'—')}</span></div>
-      <div class="tt-row"><span class="tt-key">TYPE</span><span class="tt-val">${escHtml(node.device_type||'—')}</span></div>
-      <div class="tt-row"><span class="tt-key">LATENCY</span><span class="tt-val">${lat}</span></div>
-    `;
-    tt.style.display = 'block';
-    tt.style.left = (e.clientX + 16) + 'px';
-    tt.style.top  = Math.min(e.clientY - 10, window.innerHeight - 200) + 'px';
+// ─── Mouse events ────────────────────────────────────────────────────────────
+canvas.addEventListener('mousedown', e => {
+  const w = toWorld(e.clientX, e.clientY);
+  const n = nodeAt(w.x, w.y);
+  if (n) {
+    dragNode  = n;
+    dragOffX  = w.x - n.x;
+    dragOffY  = w.y - n.y;
+    didDrag   = false;
+    canvas.style.cursor = 'grabbing';
   } else {
-    canvas.style.cursor = dragging ? 'grabbing' : 'grab';
+    isPanning = true;
+    panStart  = {x: e.clientX - panX, y: e.clientY - panY};
+    canvas.style.cursor = 'grabbing';
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const w = toWorld(e.clientX, e.clientY);
+
+  if (dragNode) {
+    const newX = w.x - dragOffX;
+    const newY = w.y - dragOffY;
+    if (Math.hypot(newX - dragNode.x, newY - dragNode.y) > 3) didDrag = true;
+    dragNode.x = newX;
+    dragNode.y = newY;
+    document.getElementById('tt').style.display = 'none';
+    return;
+  }
+
+  if (isPanning) {
+    panX = e.clientX - panStart.x;
+    panY = e.clientY - panStart.y;
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+
+  // Hover
+  const n = nodeAt(w.x, w.y);
+  hovered = n || null;
+  const tt = document.getElementById('tt');
+  if (n) {
+    canvas.style.cursor = 'pointer';
+    const lat = n.latency_ms != null ? n.latency_ms.toFixed(1)+' ms' : '—';
+    const oc  = n.online ? 'tton' : 'ttoff';
+    const ol  = n.online ? '● ONLINE' : '✕ OFFLINE';
+    tt.innerHTML = `
+      <div class="ttn">${esc(n.hostname!==n.ip?n.hostname:n.ip)}</div>
+      <div class="ttr"><span class="ttk">STATUS</span><span class="ttv ${oc}">${ol}</span></div>
+      <div class="ttr"><span class="ttk">IP</span><span class="ttv">${esc(n.ip)}</span></div>
+      <div class="ttr"><span class="ttk">MAC</span><span class="ttv">${esc(n.mac||'—')}</span></div>
+      <div class="ttr"><span class="ttk">OS</span><span class="ttv">${esc(n.os_guess||'—')}</span></div>
+      <div class="ttr"><span class="ttk">TYPE</span><span class="ttv">${esc(n.device_type||'—')}</span></div>
+      <div class="ttr"><span class="ttk">LATENCY</span><span class="ttv">${lat}</span></div>`;
+    tt.style.display = 'block';
+    tt.style.left = (e.clientX+16)+'px';
+    tt.style.top  = Math.min(e.clientY-10, window.innerHeight-210)+'px';
+  } else {
+    canvas.style.cursor = 'grab';
     tt.style.display = 'none';
   }
-
-  if (dragging) {
-    viewOffset.x += e.clientX - dragStart.x;
-    viewOffset.y += e.clientY - dragStart.y;
-    dragStart = {x: e.clientX, y: e.clientY};
-  }
 });
 
-canvas.addEventListener('mousedown', e => {
-  const c = canvasCoords(e);
-  if (!nodeAt(c.x, c.y)) {
-    dragging = true;
-    dragStart = {x: e.clientX, y: e.clientY};
+window.addEventListener('mouseup', e => {
+  if (dragNode) {
+    if (!didDrag) {
+      // treat as click — select node
+      selected = dragNode;
+      loadDetail(dragNode.ip);
+    }
+    dragNode = null;
+    canvas.style.cursor = 'grab';
   }
-});
-
-window.addEventListener('mouseup', () => { dragging = false; });
-
-canvas.addEventListener('click', e => {
-  const c = canvasCoords(e);
-  const node = nodeAt(c.x, c.y);
-  if (node) {
-    selected = node;
-    loadDetail(node.ip);
+  if (isPanning) {
+    isPanning = false;
+    canvas.style.cursor = 'grab';
   }
 });
 
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  const f = e.deltaY < 0 ? 1.1 : 0.9;
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
-  viewOffset.x = mx - factor * (mx - viewOffset.x);
-  viewOffset.y = my - factor * (my - viewOffset.y);
-  viewScale *= factor;
-  viewScale = Math.max(0.3, Math.min(4, viewScale));
-}, { passive: false });
+  panX = mx - f*(mx-panX);
+  panY = my - f*(my-panY);
+  zoom = Math.max(0.25, Math.min(4, zoom*f));
+}, {passive:false});
 
 canvas.addEventListener('mouseleave', () => {
-  document.getElementById('tooltip').style.display = 'none';
+  document.getElementById('tt').style.display = 'none';
   hovered = null;
 });
 
-// ─── Detail Panel ─────────────────────────────────────────────────────────────
+// ─── DETAIL / DOSSIER ────────────────────────────────────────────────────────
 async function loadDetail(ip) {
-  const body = document.getElementById('detail-body');
-  document.getElementById('detail-ip').textContent = ip;
-  body.innerHTML = '<div id="detail-empty" style="grid-column:1/-1;color:var(--muted);font-family:var(--font-mono);padding:20px">LOADING…</div>';
-
+  const dos = document.getElementById('dossier');
+  dos.innerHTML = `<div id="dempty"><div>LOADING DEVICE DATA…</div></div>`;
   try {
     const r = await fetch(`/api/devices/${encodeURIComponent(ip)}`);
+    if (!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
-    renderDetail(d);
-  } catch(e) {
-    body.innerHTML = `<div id="detail-empty" style="grid-column:1/-1;color:var(--danger);font-family:var(--font-mono);padding:20px">ERROR: ${escHtml(String(e))}</div>`;
+    // Update local cache
+    const idx = devices.findIndex(x=>x.ip===ip);
+    if (idx>=0) { devices[idx]=d; updateStats(); }
+    renderDossier(d);
+  } catch(ex) {
+    dos.innerHTML = `<div id="dempty"><div style="color:var(--danger)">ERROR: ${esc(String(ex))}</div></div>`;
   }
 }
 
-function renderDetail(d) {
-  const body = document.getElementById('detail-body');
-  const online = d.online;
-  const statusClass = online ? 'green' : 'danger';
-  const statusLabel = online ? '● ONLINE' : '✕ OFFLINE';
-  const lat = d.latency_ms != null ? d.latency_ms.toFixed(2) + ' ms' : '—';
-  const lastSeen = d.last_seen ? new Date(d.last_seen).toLocaleString() : '—';
+function renderDossier(d) {
+  const dos     = document.getElementById('dossier');
+  const online  = !!d.online;
+  const color   = TCOL[d.device_type] || '#3a5878';
+  const lat     = d.latency_ms != null ? d.latency_ms.toFixed(2)+' ms' : '—';
+  const latPct  = d.latency_ms != null ? Math.min(d.latency_ms/200*100,100) : 0;
+  const latCls  = d.latency_ms == null ? '' : d.latency_ms<20?'good':d.latency_ms<80?'ok':'bad';
+  const lastSeen= d.last_seen ? new Date(d.last_seen).toLocaleString() : '—';
+  const ports   = d.open_ports || [];
+  const ip      = d.ip || '';
+  const hostname= d.hostname || ip;
 
-  const ports = (d.open_ports || []);
-  const portHtml = ports.length
-    ? ports.map(p => `<span class="port-badge">${p.port}</span><span class="port-badge svc">${escHtml(p.service)}</span>`).join(' ')
-    : '<span style="color:var(--muted)">none detected</span>';
+  // ── ports HTML ──
+  let portsHtml;
+  if (ports.length) {
+    portsHtml = ports.map(p=>`
+      <div class="port-row">
+        <div class="port-dot"></div>
+        <div class="port-num">${p.port}/tcp</div>
+        <div class="port-svc">${esc(p.service)}</div>
+      </div>`).join('');
+  } else {
+    portsHtml = `<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">No open ports detected on common ports scan.</div>`;
+  }
 
-  body.innerHTML = `
-    <div class="info-card fade-in">
-      <div class="card-label">STATUS</div>
-      <div class="card-value ${statusClass}">${statusLabel}</div>
-    </div>
-    <div class="info-card fade-in">
-      <div class="card-label">IP ADDRESS</div>
-      <div class="card-value accent">${escHtml(d.ip)}</div>
-    </div>
-    <div class="info-card fade-in">
-      <div class="card-label">LATENCY</div>
-      <div class="card-value ${online ? 'green' : 'danger'}">${lat}</div>
-    </div>
-    <div class="info-card fade-in span-2">
-      <div class="card-label">HOSTNAME</div>
-      <div class="card-value">${escHtml(d.hostname||'—')}</div>
-    </div>
-    <div class="info-card fade-in">
-      <div class="card-label">DEVICE TYPE</div>
-      <div class="card-value accent">${escHtml(deviceIcon(d))} ${escHtml(d.device_type||'—')}</div>
-    </div>
-    <div class="info-card fade-in span-2">
-      <div class="card-label">MAC ADDRESS</div>
-      <div class="card-value">${escHtml(d.mac||'—')}</div>
-    </div>
-    <div class="info-card fade-in">
-      <div class="card-label">VENDOR / MFR</div>
-      <div class="card-value">${escHtml(d.vendor||'Unknown')}</div>
-    </div>
-    <div class="info-card fade-in span-3">
-      <div class="card-label">OS DETECTION</div>
-      <div class="card-value warn">${escHtml(d.os_guess||'—')}</div>
-    </div>
-    <div class="info-card fade-in span-3">
-      <div class="card-label">OPEN PORTS &amp; SERVICES</div>
-      <div class="ports-list">${portHtml}</div>
-    </div>
-    <div class="info-card fade-in">
-      <div class="card-label">LAST SEEN</div>
-      <div class="card-value" style="font-size:12px">${escHtml(lastSeen)}</div>
-    </div>
-    <div class="info-card fade-in span-2">
-      <div class="card-label">QUICK ACTIONS</div>
-      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-        <button onclick="pingDevice('${escHtml(d.ip)}')" style="font-family:var(--font-mono);font-size:11px;padding:4px 12px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:3px;cursor:pointer">PING</button>
-        <button onclick="tracerouteDevice('${escHtml(d.ip)}')" style="font-family:var(--font-mono);font-size:11px;padding:4px 12px;border:1px solid var(--muted);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer">TRACEROUTE</button>
-        <button onclick="rescanDevice('${escHtml(d.ip)}')" style="font-family:var(--font-mono);font-size:11px;padding:4px 12px;border:1px solid var(--accent2);background:transparent;color:var(--accent2);border-radius:3px;cursor:pointer">RE-SCAN</button>
+  dos.innerHTML = `
+  <div class="dos-wrap fade-up">
+    <!-- LEFT: identity column -->
+    <div class="dos-id">
+      <div class="dos-id-top">
+        <div class="dos-badge" style="color:${color};border-color:${color};box-shadow:0 0 16px ${color}40">
+          <span>${dIcon(d)}</span>
+          <div class="dos-badge-status ${online?'online':'offline'}"></div>
+        </div>
+        <div class="dos-hostname">${esc(hostname!==ip?hostname:'['+ip+']')}</div>
+        <div class="dos-ip">${esc(ip)}</div>
+        <div style="text-align:center;margin-top:6px">
+          <span class="dos-status-label ${online?'online':'offline'}">${online?'● ONLINE':'✕ OFFLINE'}</span>
+        </div>
+      </div>
+      <div class="dos-fields">
+        <div class="dos-field">
+          <div class="dos-field-key">Device Type</div>
+          <div class="dos-field-val accent">${esc(d.device_type||'Unknown')}</div>
+        </div>
+        <div class="dos-field">
+          <div class="dos-field-key">Latency</div>
+          <div class="dos-field-val ${latCls==='good'?'green':latCls==='ok'?'warn':latCls==='bad'?'danger':'muted'}">${lat}</div>
+          ${lat!=='—'?`<div class="lat-bar-wrap"><div class="lat-bar ${latCls}" style="width:${latPct}%"></div></div>`:''}
+        </div>
+        <div class="dos-field">
+          <div class="dos-field-key">Last Seen</div>
+          <div class="dos-field-val" style="font-size:10px">${esc(lastSeen)}</div>
+        </div>
+        <div class="dos-field">
+          <div class="dos-field-key">Open Ports</div>
+          <div class="dos-field-val ${ports.length?'accent':'muted'}">${ports.length ? ports.length+' detected' : 'none'}</div>
+        </div>
       </div>
     </div>
+
+    <!-- RIGHT: detail sections -->
+    <div class="dos-main">
+      <div class="dos-hdr">
+        <span class="dos-hdr-title">DEVICE DOSSIER</span>
+        <span class="dos-hdr-ip">// ${esc(ip)}</span>
+        <div class="dos-hdr-sp"></div>
+        <button class="dos-action ping"  onclick="doPing('${esc(ip)}')">PING</button>
+        <button class="dos-action trace" onclick="doTrace('${esc(ip)}')">TRACEROUTE</button>
+        <button class="dos-action scan"  onclick="doRescan('${esc(ip)}')">RE-SCAN</button>
+      </div>
+      <div class="dos-sections">
+
+        <!-- NETWORK IDENTITY -->
+        <div class="dos-section">
+          <div class="dos-section-hdr">Network Identity</div>
+          <div class="dos-section-body">
+            <div class="dos-grid">
+              <div class="dos-gfield">
+                <div class="dos-gkey">IP Address</div>
+                <div class="dos-gval accent">${esc(ip)}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">Hostname</div>
+                <div class="dos-gval">${esc(hostname)}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">MAC Address</div>
+                <div class="dos-gval">${esc(d.mac||'—')}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">Manufacturer</div>
+                <div class="dos-gval">${esc(d.vendor||'Unknown')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SYSTEM INFO -->
+        <div class="dos-section">
+          <div class="dos-section-hdr">System Information</div>
+          <div class="dos-section-body">
+            <div class="dos-grid">
+              <div class="dos-gfield">
+                <div class="dos-gkey">Device Type</div>
+                <div class="dos-gval accent">${esc(d.device_type||'Unknown')}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">Operating System</div>
+                <div class="dos-gval warn">${esc(d.os_guess||'Could not determine')}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">Status</div>
+                <div class="dos-gval ${online?'green':'danger'}">${online?'ONLINE':'OFFLINE'}</div>
+              </div>
+              <div class="dos-gfield">
+                <div class="dos-gkey">Round-Trip Latency</div>
+                <div class="dos-gval ${latCls==='good'?'green':latCls==='ok'?'warn':latCls==='bad'?'danger':'muted'}">${lat}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPEN PORTS -->
+        <div class="dos-section">
+          <div class="dos-section-hdr">Open Ports &amp; Services (common ports)</div>
+          <div class="dos-section-body">${portsHtml}</div>
+        </div>
+
+        <!-- TERMINAL OUTPUT -->
+        <div class="dos-section" id="term-section" style="display:none">
+          <div class="dos-section-hdr" id="term-label">Terminal Output</div>
+          <div class="dos-section-body">
+            <div class="dos-terminal" id="term-out"></div>
+          </div>
+        </div>
+
+      </div><!-- /dos-sections -->
+    </div><!-- /dos-main -->
+  </div><!-- /dos-wrap -->
   `;
 }
 
-// ─── Quick-action terminal output ────────────────────────────────────────────
-async function pingDevice(ip) {
-  appendTerminal(ip, 'PING', `Running ping -c 4 ${ip} ...`);
-  const r = await fetch(`/api/ping?ip=${encodeURIComponent(ip)}`);
-  const d = await r.json();
-  appendTerminal(ip, 'PING', d.output || d.error || 'no output');
-}
-async function tracerouteDevice(ip) {
-  appendTerminal(ip, 'TRACEROUTE', `Running traceroute ${ip} ...`);
-  const r = await fetch(`/api/traceroute?ip=${encodeURIComponent(ip)}`);
-  const d = await r.json();
-  appendTerminal(ip, 'TRACEROUTE', d.output || d.error || 'no output');
-}
-async function rescanDevice(ip) {
-  const r = await fetch(`/api/devices/${encodeURIComponent(ip)}`);
-  const d = await r.json();
-  const i = devices.findIndex(x => x.ip === ip);
-  if (i >= 0) { devices[i] = d; updateStats(); }
-  renderDetail(d);
+// ─── Actions ─────────────────────────────────────────────────────────────────
+async function doPing(ip) {
+  showTerm('PING — '+ip, `$ ping -c 4 ${ip}\n`);
+  try {
+    const r = await fetch(`/api/ping?ip=${encodeURIComponent(ip)}`);
+    const d = await r.json();
+    appendTerm(d.output||d.error||'no output');
+  } catch(e){ appendTerm('Error: '+e); }
 }
 
-function appendTerminal(ip, label, text) {
-  const body = document.getElementById('detail-body');
-  let term = document.getElementById('terminal-card');
-  if (!term) {
-    const card = document.createElement('div');
-    card.className = 'info-card fade-in span-3';
-    card.id = 'terminal-card';
-    card.innerHTML = `<div class="card-label">${label} — ${ip}</div><pre id="term-out" style="font-family:var(--font-mono);font-size:11px;color:var(--accent2);white-space:pre-wrap;max-height:140px;overflow-y:auto;margin-top:6px"></pre>`;
-    body.appendChild(card);
-    term = card;
+async function doTrace(ip) {
+  showTerm('TRACEROUTE — '+ip, `$ traceroute ${ip}\n`);
+  try {
+    const r = await fetch(`/api/traceroute?ip=${encodeURIComponent(ip)}`);
+    const d = await r.json();
+    appendTerm(d.output||d.error||'no output');
+  } catch(e){ appendTerm('Error: '+e); }
+}
+
+async function doRescan(ip) {
+  const btn = document.querySelector('.dos-action.scan');
+  if (btn) { btn.disabled=true; btn.textContent='SCANNING…'; }
+  try {
+    const r = await fetch(`/api/devices/${encodeURIComponent(ip)}`);
+    const d = await r.json();
+    const idx = devices.findIndex(x=>x.ip===ip);
+    if (idx>=0) { devices[idx]=d; updateStats(); }
+    // Update node in map
+    const ni = nodes.findIndex(n=>n.ip===ip);
+    if (ni>=0) { nodes[ni] = {...nodes[ni], ...d}; }
+    renderDossier(d);
+  } catch(e){
+    if (btn) { btn.disabled=false; btn.textContent='RE-SCAN'; }
   }
-  const pre = document.getElementById('term-out');
-  pre.textContent += '\n' + text;
-  pre.scrollTop = pre.scrollHeight;
+}
+
+function showTerm(label, initial) {
+  const sec = document.getElementById('term-section');
+  if (!sec) return;
+  sec.style.display = '';
+  document.getElementById('term-label').textContent = label;
+  document.getElementById('term-out').textContent = initial;
+  sec.scrollIntoView({behavior:'smooth'});
+}
+function appendTerm(text) {
+  const el = document.getElementById('term-out');
+  if (el) { el.textContent += text; el.scrollTop = el.scrollHeight; }
 }
 
 // ─── Scan ─────────────────────────────────────────────────────────────────────
 async function startScan() {
-  try {
-    await fetch('/api/scan', { method: 'POST' });
-  } catch(e) {}
+  try { await fetch('/api/scan',{method:'POST'}); } catch(e){}
+  document.getElementById('bscan').disabled = true;
+  showOverlay();
   pollScan();
-  showScanOverlay();
-  document.getElementById('btn-scan').disabled = true;
 }
 
-function showScanOverlay() {
-  document.getElementById('scan-overlay').classList.add('visible');
-}
-function hideScanOverlay() {
-  document.getElementById('scan-overlay').classList.remove('visible');
-}
+function showOverlay(){ document.getElementById('sovl').classList.add('vis'); }
+function hideOverlay(){ document.getElementById('sovl').classList.remove('vis'); }
 
 function pollScan() {
   if (scanPoll) clearInterval(scanPoll);
-  scanPoll = setInterval(async () => {
+  const msgs = ['INITIALIZING…','ARP SWEEP…','IDENTIFYING DEVICES…','PORT SCANNING…','OS DETECTION…','FINALIZING…'];
+  scanPoll = setInterval(async ()=>{
     try {
       const r  = await fetch('/api/scan/status');
       const st = await r.json();
-      const pct = st.progress || 0;
-      document.getElementById('scan-bar-fill').style.width = pct + '%';
-      const msgs = ['INITIALIZING…','ARP SWEEP…','IDENTIFYING DEVICES…','PORT SCANNING…','OS DETECTION…','FINALIZING…'];
-      const mi = Math.min(Math.floor(pct/18), msgs.length-1);
-      document.getElementById('scan-msg').textContent = msgs[mi];
-
-      // Global progress bar
-      document.getElementById('progress-wrap').style.display = 'block';
-      document.getElementById('progress-fill').style.width = pct + '%';
-
+      const pct = st.progress||0;
+      document.getElementById('sbf').style.width = pct+'%';
+      document.getElementById('sovmsg').textContent = msgs[Math.min(Math.floor(pct/18),msgs.length-1)];
+      document.getElementById('pgwrap').style.display = 'block';
+      document.getElementById('pgfill').style.width = pct+'%';
       if (!st.running) {
-        clearInterval(scanPoll);
-        scanPoll = null;
-        hideScanOverlay();
-        document.getElementById('btn-scan').disabled = false;
-        document.getElementById('progress-wrap').style.display = 'none';
+        clearInterval(scanPoll); scanPoll=null;
+        hideOverlay();
+        document.getElementById('bscan').disabled=false;
+        document.getElementById('pgwrap').style.display='none';
         await refreshDevices();
       }
-    } catch(e) {}
+    } catch(e){}
   }, 800);
 }
 
-async function healthCheck() {
-  document.getElementById('btn-health').disabled = true;
-  await fetch('/api/health', { method: 'POST' });
-  setTimeout(async () => {
+async function doHealth() {
+  document.getElementById('bhealth').disabled = true;
+  try { await fetch('/api/health',{method:'POST'}); } catch(e){}
+  setTimeout(async ()=>{
     await refreshDevices();
-    document.getElementById('btn-health').disabled = false;
-  }, 6000);
+    document.getElementById('bhealth').disabled=false;
+  }, 7000);
 }
 
 async function refreshDevices() {
   try {
     const r = await fetch('/api/devices');
-    devices = await r.json();
+    const fresh = await r.json();
+    // Merge: preserve node positions, update data
+    fresh.forEach(d => {
+      const ni = nodes.findIndex(n=>n.ip===d.ip);
+      if (ni>=0) { nodes[ni] = {...nodes[ni], ...d}; }
+    });
+    devices = fresh;
     updateStats();
-    nodes = layoutNodes(filteredDevices());
-  } catch(e) {}
+    // Re-layout only new devices (ones not in nodes yet)
+    const newDevs = filteredDevices().filter(d => !nodes.find(n=>n.ip===d.ip));
+    if (newDevs.length) {
+      const startIdx = nodes.length;
+      newDevs.forEach((d,i) => {
+        const idx = startIdx + i;
+        const col = idx % COLS;
+        const row = Math.floor(idx / COLS);
+        nodes.push({ ...d, x: MARGIN+col*CELL_W+CELL_W/2, y: MARGIN+row*CELL_H+CELL_H/2, r: NODE_R });
+      });
+    }
+  } catch(e){}
 }
 
 function updateStats() {
-  const total   = devices.length;
-  const online  = devices.filter(d => d.online).length;
-  const offline = total - online;
-  document.getElementById('st-total').textContent   = total;
-  document.getElementById('st-online').textContent  = online;
-  document.getElementById('st-offline').textContent = offline;
+  const on = devices.filter(d=>d.online).length;
+  document.getElementById('st').textContent = devices.length;
+  document.getElementById('so').textContent = on;
+  document.getElementById('sf').textContent = devices.length - on;
 }
 
 function setFilter(f, btn) {
   filter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
   nodes = layoutNodes(filteredDevices());
 }
 
@@ -949,20 +882,18 @@ function onSearch(q) {
   nodes = layoutNodes(filteredDevices());
 }
 
-// ─── Network Info ──────────────────────────────────────────────────────────────
+// ─── Network Info ─────────────────────────────────────────────────────────────
 async function loadNetInfo() {
   try {
     const r = await fetch('/api/network');
     const d = await r.json();
-    document.getElementById('hdr-net').textContent  = d.network || '—';
-    document.getElementById('hdr-host').textContent = d.hostname || '—';
-  } catch(e) {}
+    document.getElementById('hnet').textContent  = d.network  || '—';
+    document.getElementById('hhost').textContent = d.hostname || '—';
+  } catch(e){}
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 window.addEventListener('resize', resizeCanvas);
@@ -971,36 +902,26 @@ async function init() {
   resizeCanvas();
   animate();
   loadNetInfo();
-
-  // Check if scan is already running
   try {
     const r  = await fetch('/api/scan/status');
     const st = await r.json();
     if (st.running) {
-      showScanOverlay();
-      document.getElementById('btn-scan').disabled = true;
+      showOverlay();
+      document.getElementById('bscan').disabled = true;
       pollScan();
     } else if (st.last_scan) {
-      hideScanOverlay();
+      hideOverlay();
       await refreshDevices();
     } else {
-      showScanOverlay();
-      document.getElementById('btn-scan').disabled = true;
+      showOverlay();
+      document.getElementById('bscan').disabled = true;
       pollScan();
     }
   } catch(e) {
-    // server not yet ready, retry
     setTimeout(init, 1500);
     return;
   }
-
-  // Auto health check every 60s
-  setInterval(async () => {
-    await fetch('/api/health', { method: 'POST' });
-    setTimeout(refreshDevices, 8000);
-  }, 60000);
-
-  // Refresh devices every 15s
+  setInterval(async()=>{ try{ await fetch('/api/health',{method:'POST'}); setTimeout(refreshDevices,8000); }catch(e){} }, 60000);
   setInterval(refreshDevices, 15000);
 }
 
